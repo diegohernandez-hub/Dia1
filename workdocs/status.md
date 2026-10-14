@@ -20,6 +20,7 @@ El merge del equipo no aprueba a quien no rotó. Cada persona anota su nombre en
 | Fecha | Quién | Archivo | Notas |
 |---|---|---|---|
 | 2026-10-14 | Diego | `workdocs/SPEC.md` | 6 preguntas: anuladas, separador, alcance (3 personas), `--out` sin carpeta, flags inválidos, nombre por defecto. Se agregan criterios 9 y 10 y se precisa la salida en stdout. |
+| 2026-10-14 | Diego | `workdocs/SPEC.md` | Ronda 2, 5 preguntas: archivo bloqueado por Excel (error claro, criterio 14), argumentos sueltos y valores que empiezan con `--` (criterios 12 y 13), `\r\n` también en la última línea y 0 filas (criterios 2 y 6), supuestos congelados para T-01, escape de comillas se queda. |
 
 ## Tests de aceptación
 
