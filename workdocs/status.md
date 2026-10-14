@@ -19,7 +19,7 @@ El merge del equipo no aprueba a quien no rotó. Cada persona anota su nombre en
 
 | Fecha | Quién | Archivo | Notas |
 |---|---|---|---|
-| | | `workdocs/SPEC.md` | |
+| 2026-10-14 | Diego | `workdocs/SPEC.md` | 6 preguntas: anuladas, separador, alcance (3 personas), `--out` sin carpeta, flags inválidos, nombre por defecto. Se agregan criterios 9 y 10 y se precisa la salida en stdout. |
 
 ## Tests de aceptación
 
