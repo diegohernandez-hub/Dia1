@@ -29,7 +29,7 @@ Anota el comando y el resultado. Primero rojo. Después verde, o un gap citado.
 | Story | Comando | Resultado | Gap (si sigue rojo) |
 |---|---|---|---|
 | T-01-story-1 | | | |
-| T-01-story-2 | `npm test` | Rojo: `test/filters.test.js` falla con `ERR_MODULE_NOT_FOUND` (`src/filters.js` no existe). Los 4 tests de `test/invoices.test.js` siguen en verde. | Falta implementar `filterInvoices` en `src/filters.js` según `PLAN.md`. |
+| T-01-story-2 | `npm test` | Verde: 9/9 tests pasan (5 de `filters.test.js` + 4 de `invoices.test.js`), tras implementar `filterInvoices` en `src/filters.js`. | |
 | T-01-story-3 | | | |
 
 ## Workers
