@@ -92,4 +92,4 @@ Nada de esto está en el ticket tal cual. Para T-01 quedan **congelados**: si Ma
 | S9 | Orden del JSON, sobrescribir sin preguntar, mensaje `<ruta>: <n> filas` | Decisión del equipo | Bajo | 1, 6, 9 |
 | S10 | Error si la carpeta de `--out` no existe o si los argumentos son inválidos (flag desconocido, argumento suelto, valor faltante o que empieza con `--`) | Grill | Bajo | 10–13 |
 | S11 | Error claro, sin stack trace, si no se puede escribir el archivo | Grill | Bajo | 14 |
-| S12 | Equipo de 3 personas: 3 stories (base / `--month` / `--include-void` + `--out`) | Grill | — | Reparto en `PLAN.md` |
+| S12 | Equipo de 3 personas, reparto por archivo: story-1 `src/csv.js` (`toCsv`), story-2 `src/filters.js` (`filterInvoices`), story-3 `src/cli.js` (`export-csv`) | Guía del Día 2 | — | Detalle en `PLAN.md` |
