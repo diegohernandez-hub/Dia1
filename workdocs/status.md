@@ -30,7 +30,7 @@ Anota el comando y el resultado. Primero rojo. Después verde, o un gap citado.
 |---|---|---|---|
 | T-01-story-1 | | | |
 | T-01-story-2 | | | |
-| T-01-story-3 | | | |
+| T-01-story-3 | `npm test` | FAIL: 9 de 9 tests de `test/export-csv.test.js` en rojo (criterios 1, 7–14); los 4 de `test/invoices.test.js` en verde (criterio 16) | Falta el comando `export-csv` en `src/cli.js`, y para el verde, `toCsv` (story-1) y `filterInvoices` (story-2) |
 
 ## Workers
 
@@ -38,7 +38,7 @@ Una tarea acotada y su resumen. Si hubo implementación y falta esta línea, M4 
 
 | Story | Tarea | Resumen |
 |---|---|---|
-| | | |
+| T-01-story-3 | Revisar `test/export-csv.test.js` contra `SPEC.md`: cobertura, falsos rojos, sobreespecificación y portabilidad | Los 9 criterios propios están cubiertos y fallan por la causa correcta. El 10 exigía que stderr nombrara la ruta (la spec no lo pide): pasa a control positivo. El 9 dependía del filtro de story-2: ahora compara los ids finales. Se agregan `'\uFEFF'` explícito, detección de `\n` sueltos, carpeta vacía para "no escribe" y limpieza de tmp. |
 
 ## Día 3
 
