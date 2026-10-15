@@ -29,7 +29,7 @@ Anota el comando y el resultado. Primero rojo. Después verde, o un gap citado.
 | Story | Comando | Resultado | Gap (si sigue rojo) |
 |---|---|---|---|
 | T-01-story-1 | | | |
-| T-01-story-2 | | | |
+| T-01-story-2 | `npm test` | No corrido | Node.js/npm no están instalados en este equipo (sin permisos para instalar vía Homebrew). Se escribió `test/filters.test.js` con los 5 criterios (1, 3, 4, 5, 6) sobre `filterInvoices`, pero no se confirmó que falle en rojo antes de implementar `src/filters.js`. |
 | T-01-story-3 | | | |
 
 ## Workers
@@ -38,7 +38,7 @@ Una tarea acotada y su resumen. Si hubo implementación y falta esta línea, M4 
 
 | Story | Tarea | Resumen |
 |---|---|---|
-| | | |
+| T-01-story-2 | Escribir el test de aceptación de `filterInvoices` según criterios 1, 3, 4, 5 y 6 de la spec | Se creó `test/filters.test.js` con un test por criterio. No se pudo ejecutar `npm test` por falta de Node.js/npm en el entorno. |
 
 ## Día 3
 
