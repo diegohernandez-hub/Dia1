@@ -159,6 +159,12 @@ Con el `src/data/invoices.json` actual (F-1001 a F-1004). Los tests levantan el 
 28. `totalAmount([])` devuelve 0. `totalAmount` de F-1001, F-1002 y F-1004 devuelve 2590000. Es un test unitario con datos en memoria.
 29. Prueba manual, como María (se anota en `status.md`): `node src/server.js`, abrir http://localhost:3000 y elegir abierta y 2026-09. La tabla muestra solo F-1004 y el total 450000. "Descargar CSV" baja `facturas.csv` y abre en Excel con F-1004.
 30. `npm test` queda en verde, con los tests del T-01 sin cambios.
+31. Caso borde: si leer las facturas falla (por ejemplo, `src/data/invoices.json` corrupto), `/api/invoices` y `/api/export.csv` responden 500 con JSON `{ "error": "<mensaje>" }`, sin stack trace en el cuerpo, y el servidor sigue vivo: un `GET /` posterior responde 200. El test corre sobre una copia de `src/` en `<tmp>`, para no arriesgar el fixture.
+32. Caso borde: `node src/server.js` con el puerto ocupado sale con código 1; stderr nombra el puerto y no trae stack trace (ninguna línea que empiece con `    at `).
+33. Caso borde: con `PORT` que no es un entero entre 0 y 65535 (por ejemplo `abc`), `node src/server.js` sale con código 1, stderr contiene `PORT` y no trae stack trace. Con `PORT=0` imprime la URL con el puerto real que asignó el sistema, no `:0`.
+34. Caso borde: un método distinto de GET en una ruta conocida (por ejemplo `POST /api/invoices`) responde 404, igual que una ruta desconocida.
+35. Caso borde (página): si la API no responde (servidor caído), responde un error sin JSON o responde algo que no es una lista, `fetchInvoices` (función testeable en Node, la misma que usa la página) devuelve `{ invoices: [], error }` con un mensaje para María. La página lo muestra en `#error`, deja la tabla vacía y el total en 0.
+36. Caso borde (página): si María cambia los filtros rápido y las respuestas llegan desordenadas, la página pinta solo la respuesta del último cambio, así lo que se ve sigue siendo lo que se baja (S16). Lo hace `latestOnly` (función testeable en Node, la misma que usa la página): una llamada que quedó vieja se descarta.
 
 ## Fuera de alcance
 

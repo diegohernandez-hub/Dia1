@@ -116,6 +116,8 @@ Comando: `npm test`. Falla porque `export-csv` no existe (sale con el mensaje de
 Una línea por caso: quién, qué criterio de la spec y en qué story.
 
 - **Diego Hernández** · criterio 17 · story-3 (`src/cli.js`): `--out` apuntando a `src/data/invoices.json` borraba los datos. Ahora `export-csv` lo rechaza antes de escribir.
+- **Diego Hernández** · criterios 31–34 · T-02 integración (`src/server.js`): con `invoices.json` corrupto el primer request botaba el servidor entero; con el puerto ocupado o `PORT=abc` salía un stack trace; con `PORT=0` imprimía `:0`; faltaba test de `POST` → 404. Ahora: 500 con JSON y el servidor sigue vivo; errores de arranque claros con código 1; la URL impresa trae el puerto real.
+- **Diego Hernández** · criterios 35–36 · T-02 integración (`src/page.js`): con el servidor caído o una respuesta sin JSON la página quedaba congelada sin aviso; con respuestas desordenadas podía pintar un filtro viejo mientras el botón bajaba el nuevo. Ahora `fetchInvoices` devuelve un error para mostrar y `latestOnly` descarta respuestas viejas.
 
 ## Orden
 

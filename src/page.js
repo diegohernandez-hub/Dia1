@@ -2,6 +2,39 @@ export function totalAmount(invoices) {
   return invoices.reduce((sum, invoice) => sum + invoice.amount, 0)
 }
 
+// SPEC criterio 35: nunca lanza; si la API falla devuelve un mensaje para mostrar.
+export async function fetchInvoices(query, fetchImpl = fetch) {
+  let response
+  try {
+    response = await fetchImpl(query ? `/api/invoices?${query}` : '/api/invoices')
+  } catch {
+    return { invoices: [], error: 'No se pudo conectar con el servidor. Revisa que node src/server.js siga corriendo.' }
+  }
+  let body = null
+  try {
+    body = await response.json()
+  } catch {
+    body = null
+  }
+  if (!response.ok) {
+    return { invoices: [], error: body?.error ?? `El servidor respondió con un error (${response.status}).` }
+  }
+  if (!Array.isArray(body)) {
+    return { invoices: [], error: 'El servidor respondió algo inesperado.' }
+  }
+  return { invoices: body, error: null }
+}
+
+// SPEC criterio 36: solo la última llamada cuenta; las anteriores llegan como { stale: true }.
+export function latestOnly(fn) {
+  let latest = 0
+  return async (...args) => {
+    const call = ++latest
+    const value = await fn(...args)
+    return call === latest ? { stale: false, value } : { stale: true }
+  }
+}
+
 // Corre en el navegador. Pinta los datos con textContent, nunca con innerHTML.
 function pageScript() {
   const status = document.querySelector('select[name="status"]')
@@ -19,14 +52,17 @@ function pageScript() {
     return params.toString()
   }
 
+  const load = latestOnly(fetchInvoices)
+
   async function refresh() {
     const query = currentParams()
     descargar.href = query ? `/api/export.csv?${query}` : '/api/export.csv'
-    const response = await fetch(query ? `/api/invoices?${query}` : '/api/invoices')
-    const body = await response.json()
+    const result = await load(query)
+    if (result.stale) return
+    const body = result.value.invoices
     rows.replaceChildren()
-    if (!response.ok) {
-      error.textContent = body.error
+    if (result.value.error) {
+      error.textContent = result.value.error
       contador.textContent = '0 facturas'
       total.textContent = '0'
       return
@@ -187,6 +223,8 @@ export function renderPage() {
 </main>
 <script>
 ${totalAmount.toString()}
+${fetchInvoices.toString()}
+${latestOnly.toString()}
 (${pageScript.toString()})()
 </script>
 </body>
