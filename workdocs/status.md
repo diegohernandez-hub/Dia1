@@ -10,7 +10,7 @@ El merge del equipo no aprueba a quien no rotó. Cada persona anota su nombre en
 
 | Persona | Roles (por ejemplo: redacción o grill de la spec, dueña de test, comentario de review) |
 |---|---|
-| | |
+| Diego Hernández | Redacción de la spec, grill de la spec |
 | | |
 | | |
 | | |
@@ -28,7 +28,7 @@ Anota el comando y el resultado. Primero rojo. Después verde, o un gap citado.
 
 | Story | Comando | Resultado | Gap (si sigue rojo) |
 |---|---|---|---|
-| T-01-story-1 | | | |
+| T-01-story-1 | `npm test` | Rojo (2026-10-15): 7 tests, 4 pass, 3 fail; los 3 de `test/csv.test.js` (criterios 2, 6 y 15) fallaban con `ERR_MODULE_NOT_FOUND`. Verde (2026-10-19): 7 tests, 7 pass, 0 fail, con `toCsv` en `src/csv.js`. | |
 | T-01-story-2 | `npm test` | Verde: 9/9 tests pasan (5 de `filters.test.js` + 4 de `invoices.test.js`), tras implementar `filterInvoices` en `src/filters.js`. | |
 | T-01-story-3 | | | |
 
@@ -38,6 +38,7 @@ Una tarea acotada y su resumen. Si hubo implementación y falta esta línea, M4 
 
 | Story | Tarea | Resumen |
 |---|---|---|
+| T-01-story-1 | Explore: revisar `test/csv.test.js` contra los criterios 2, 6 y 15 de `SPEC.md` y el contrato de `toCsv` en `PLAN.md` | OK, sin nada fuera de spec. Sugirió endurecer el criterio 2 (sin línea vacía final ni `\r` suelto); se aplicó. |
 | T-01-story-2 | Escribir el test de aceptación de `filterInvoices` según criterios 1, 3, 4, 5 y 6 de la spec | Se creó `test/filters.test.js` con un test por criterio y se corrió con `npm test`: falla en rojo (`src/filters.js` no existe), como se esperaba antes de implementar. |
 
 ## Día 3
