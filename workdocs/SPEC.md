@@ -166,7 +166,7 @@ Con el `src/data/invoices.json` actual (F-1001 a F-1004). Los tests levantan el 
 - La S4 del ticket (monto en pesos chilenos, anuladas en gris, búsqueda por cliente): solo entra si sobra tiempo y como story aparte con su criterio.
 - Editar o crear facturas, paginación y orden por columna.
 - Cambiar `src/invoices.js`, `src/filters.js`, `src/csv.js`, `src/cli.js` o `invoices.json`.
-- Estilos más allá de lo mínimo para que la tabla se lea.
+- Frameworks o archivos de CSS aparte. El estilo profesional de la página (pedido el 2026-10-19 para la presentación) es CSS inline en el mismo HTML y no cambia datos, columnas, filtros ni el formato del monto (entero sin formato).
 
 ## Supuestos y decisiones
 
