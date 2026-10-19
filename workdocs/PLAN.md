@@ -159,7 +159,7 @@ El navegador usa la API de story-1 tal como la fija la SPEC: `GET /api/invoices?
 
 ## Story 1: `feat/T-02-story-1` · servidor, API y descarga
 
-**Persona:**
+**Persona:** Diego Hernández (persona A, además coordinador)
 
 **Qué entra:** el servidor con las dos rutas de datos (corresponde a S1 y S3 del ticket) y los filtros comunes.
 
@@ -192,7 +192,7 @@ Comando: `npm test`. Falla porque `src/server.js` no existe.
 
 ## Story 2: `feat/T-02-story-2` · página, filtros y total
 
-**Persona:**
+**Persona:** Joaquin Martinez (persona B)
 
 **Qué entra:** la página que ve María (S2 del ticket): tabla, filtros, total y el botón de descarga, y la ruta `GET /`.
 
@@ -234,10 +234,19 @@ Por qué partido en dos: el hook bloquea el commit con `npm test` en rojo. Si el
 
 ## Worktrees (T-02)
 
+Cada persona trabaja en su computador. El coordinador (Diego) crea y publica las dos ramas; cada uno monta su worktree en su máquina.
+
 ```
+# Diego, en Dia1/ (coordinador)
 git pull origin main
-git worktree add -b feat/T-02-story-1 ../Dia1-T02-story-1 main   # persona A
-git worktree add -b feat/T-02-story-2 ../Dia1-T02-story-2 main   # persona B
+git branch feat/T-02-story-1 main && git push -u origin feat/T-02-story-1
+git branch feat/T-02-story-2 main && git push -u origin feat/T-02-story-2
+git worktree add ../Dia1-T02-story-1 feat/T-02-story-1            # persona A: Diego
+
+# Joaquin, en su clone del repo
+git checkout main && git pull origin main
+git worktree add ../Dia1-T02-story-2 origin/feat/T-02-story-2 -b feat/T-02-story-2   # persona B: Joaquin
+cd ../Dia1-T02-story-2 && git branch -u origin/feat/T-02-story-2
 ```
 
 ## Coordinador y revisor (T-02): el estándar del Día 3, en equipo de 2
@@ -246,9 +255,9 @@ Copia de la demo "En vivo: un coordinador moderniza MOD-7 y otro agente revisa c
 
 | Sesión | Dónde corre | Quién la maneja | Qué hace | Qué no hace |
 |---|---|---|---|---|
-| **Coordinador** | `Dia1/` (checkout en `main`) | Persona A | Reparte (worktrees), vigila `status.md` y los PRs, lanza el revisor sobre cada PR y deja su informe como comentario | No escribe código de producto. No hace merge |
-| **Worker 1** | `../Dia1-T02-story-1` | Persona A | Story-1: test rojo, `query.js` y `server.js`, PR | No toca `src/page.js` |
-| **Worker 2** | `../Dia1-T02-story-2` | Persona B | Story-2: test rojo, `page.js`, ruta `GET /`, PR | No toca `src/query.js` |
+| **Coordinador** | `Dia1/` (checkout en `main`), computador de Diego | Diego (A) | Reparte (worktrees), vigila `status.md` y los PRs, lanza el revisor sobre cada PR y deja su informe como comentario | No escribe código de producto. No hace merge |
+| **Worker 1** | `../Dia1-T02-story-1`, computador de Diego | Diego (A) | Story-1: test rojo, `query.js` y `server.js`, PR | No toca `src/page.js` |
+| **Worker 2** | `../Dia1-T02-story-2`, computador de Joaquin | Joaquin (B) | Story-2: test rojo, `page.js`, ruta `GET /`, PR | No toca `src/query.js` |
 | **Revisor** | Subagente `revisor-spec` (`.claude/agents/revisor-spec.md`), lanzado por el coordinador; contexto limpio y solo lectura | — | Compara el diff del PR con `workdocs/SPEC.md` y lista solo las brechas, con la frase de la spec y la línea del código | No edita, no comenta en GitHub, no aprueba |
 
 Regla: quien escribió el código no es el único que lo revisa. Cada PR pasa por el revisor (paso 1) y por la persona que **no** lo escribió (paso 2): A revisa el PR de story-2 y B el de story-1.
