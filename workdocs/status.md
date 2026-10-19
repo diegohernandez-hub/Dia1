@@ -31,6 +31,8 @@ Anota el comando y el resultado. Primero rojo. Después verde, o un gap citado.
 | T-01-story-1 | `npm test` | Rojo (2026-10-15): 7 tests, 4 pass, 3 fail; los 3 de `test/csv.test.js` (criterios 2, 6 y 15) fallaban con `ERR_MODULE_NOT_FOUND`. Verde (2026-10-19): 7 tests, 7 pass, 0 fail, con `toCsv` en `src/csv.js`. | |
 | T-01-story-2 | `npm test` | Verde: 9/9 tests pasan (5 de `filters.test.js` + 4 de `invoices.test.js`), tras implementar `filterInvoices` en `src/filters.js`. | |
 | T-01-story-3 | `npm test` | Rojo (2026-10-15): 9 de 9 tests de `test/export-csv.test.js` fallaban (criterios 1, 7–14), porque `export-csv` no existía. Verde (2026-10-19): 21 pass, 0 fail, con `export-csv` en `src/cli.js` sobre `toCsv` (story-1) y `filterInvoices` (story-2), traídas con merge. Caso borde, criterio 17 (2026-10-19): rojo con `--out src/data/invoices.json` (código 0 y datos pisados); verde con 22 pass y 0 fail. | |
+| T-02-story-1 | | | |
+| T-02-story-2 | | | |
 
 ## Workers
 
