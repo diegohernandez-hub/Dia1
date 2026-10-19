@@ -36,6 +36,7 @@ Comportamiento:
 - `--out <ruta>` es opcional. Por defecto escribe `facturas.csv` en el directorio actual.
   - Si el archivo existe, lo sobrescribe.
   - Si la carpeta de `<ruta>` no existe, sale con código 1 y un error en stderr; no crea carpetas.
+  - Si `<ruta>` es la fuente de datos (`src/data/invoices.json`), por ruta relativa o absoluta, sale con código 1, stderr nombra el archivo y la fuente queda intacta. Sin esta regla, el export la reemplaza por el CSV y la CLI deja de funcionar.
 - Si no se puede escribir el archivo (por ejemplo, porque está abierto en Excel o porque `<ruta>` es una carpeta), sale con código 1. stderr nombra la ruta y sugiere cerrar el archivo si está abierto, sin stack trace.
 - Argumentos inválidos: salen con código 1, imprimen el uso en stderr y no escriben archivo. Son inválidos:
   - un flag desconocido (por ejemplo `--mes`);
@@ -64,6 +65,7 @@ Con el `src/data/invoices.json` actual (F-1001 a F-1004). Cada criterio corre el
 14. `export-csv --out <tmp>` (`<tmp>` es una carpeta, no un archivo) sale con código 1, stderr contiene la ruta y no contiene un stack trace (ninguna línea que empiece con `    at `). Este criterio es el sustituto testeable de "archivo abierto en Excel", que no se puede reproducir en CI.
 15. La función que arma el texto del CSV (su nombre y firma los fija `PLAN.md`), con un cliente que contiene `;` y otro con `"`, devuelve esos campos entre comillas, con las `"` duplicadas, y cada fila tiene 5 columnas. Es un test unitario con datos en memoria; no toca `invoices.json`.
 16. `list`, `get` y los tests de `test/invoices.test.js` siguen pasando sin cambios (`npm test`).
+17. Caso borde (Lab 5, Día 3): `export-csv --out src/data/invoices.json`, con ruta relativa y con ruta absoluta, sale con código 1, stderr contiene `invoices.json` y el archivo queda byte a byte igual. Después, `list` sigue funcionando. El test corre sobre una copia de `src/` en `<tmp>`, para no arriesgar el fixture.
 
 ## Fuera de alcance
 
@@ -93,3 +95,4 @@ Nada de esto está en el ticket tal cual. Para T-01 quedan **congelados**: si Ma
 | S10 | Error si la carpeta de `--out` no existe o si los argumentos son inválidos (flag desconocido, argumento suelto, valor faltante o que empieza con `--`) | Grill | Bajo | 10–13 |
 | S11 | Error claro, sin stack trace, si no se puede escribir el archivo | Grill | Bajo | 14 |
 | S12 | Equipo de 3 personas, reparto por archivo: story-1 `src/csv.js` (`toCsv`), story-2 `src/filters.js` (`filterInvoices`), story-3 `src/cli.js` (`export-csv`) | Guía del Día 2 | — | Detalle en `PLAN.md` |
+| S13 | `--out` nunca puede apuntar a la fuente de datos | Caso borde del Lab 5 (Diego): el export la reemplazaba y se perdían las facturas | Alto si falta: se pierden datos | 17 |
