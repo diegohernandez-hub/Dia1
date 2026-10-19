@@ -101,7 +101,7 @@ Nada de esto está en el ticket tal cual. Para T-01 quedan **congelados**: si Ma
 
 # T-02: Panel de facturas
 
-Fuente: `tickets/T-02.md`. Escrita el 2026-10-19 para un equipo de 2 personas. Los criterios siguen la numeración del T-01 (18 en adelante), para que un PR pueda citar "criterio 21 de la SPEC" sin ambigüedad.
+Fuente: `tickets/T-02.md`. Escrita el 2026-10-19; reparto para 3 personas (S18). Los criterios siguen la numeración del T-01 (18 en adelante), para que un PR pueda citar "criterio 21 de la SPEC" sin ambigüedad.
 
 ## Problema
 
@@ -176,4 +176,4 @@ Con el `src/data/invoices.json` actual (F-1001 a F-1004). Los tests levantan el 
 | S15 | Los valores de estado en la API y en el CSV quedan en inglés; en el `<select>` se muestran en español | Coherente con S4 del T-01 | Bajo | 19, 22, 27 |
 | S16 | La tabla y el CSV usan la misma selección: lo que se ve es lo que se baja | Ticket ("con los filtros aplicados") | Bajo | 23, 24 |
 | S17 | Puerto 3000 por defecto y `PORT` opcional; los tests usan un puerto libre | Ticket y CI | Bajo | 18–28 |
-| S18 | Equipo de 2 personas, reparto por archivo: story-1 servidor y API (`src/server.js`, `src/query.js`); story-2 página (`src/page.js`) y la ruta `/` | Guía del Día 3 | — | Detalle en `PLAN.md` |
+| S18 | Equipo de 3 personas, reparto por archivo según las stories del ticket: story-1 API (`src/query.js`, `src/server.js` con `/api/invoices`), story-2 página (`src/page.js` y la ruta `/`), story-3 descarga (la ruta `/api/export.csv`) | Guía del Día 3 | — | Detalle en `PLAN.md` |

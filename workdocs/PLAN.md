@@ -125,11 +125,17 @@ Una línea por caso: quién, qué criterio de la spec y en qué story.
 
 ---
 
-# T-02: Panel de facturas (equipo de 2)
+# T-02: Panel de facturas (equipo de 3)
 
-Deriva de la sección T-02 de `workdocs/SPEC.md` (criterios 18 a 30). Se hace commit a `main` antes de crear los worktrees. Timebox: 55 min (LAB 6).
+Deriva de la sección T-02 de `workdocs/SPEC.md` (criterios 18 a 30). Sigue las stories sugeridas del ticket: S1 · API, S2 · Página, S3 · Descarga. Una persona por story, reparto **por archivo**.
 
-Dos stories, una por persona, con reparto **por archivo**. La única costura es `src/server.js`: lo crea story-1 y story-2 le agrega una ruta después. Por eso el merge va en orden: story-1 → story-2.
+La única costura es `src/server.js`: lo crea story-1, y story-2 y story-3 le agregan **una ruta cada una, en su propio comentario marcador**. Los marcadores están separados por una línea, así que git integra las dos ramas sin conflicto (probado el 2026-10-19 con dos ramas que editan líneas separadas por una línea en blanco).
+
+| Story | Persona | Rama | Criterios |
+|---|---|---|---|
+| S1 · API | Katia | `feat/T-02-story-1` | 18–22 y 26 |
+| S2 · Página | Joaquin Martinez | `feat/T-02-story-2` | 27, 28 y 29 |
+| S3 · Descarga | Diego Hernández (además coordinador) | `feat/T-02-story-3` | 23, 24 y 25 |
 
 ## Contratos compartidos (T-02)
 
@@ -145,9 +151,8 @@ export function selectInvoices(invoices, { status = null, month = null } = {}) /
 // status dado: filterInvoices(invoices, { month, includeVoid: true }) y deja solo ese status.
 // Mantiene el orden y no muta.
 
-// src/server.js (story-1 lo crea; story-2 agrega la ruta GET /)
+// src/server.js (story-1 lo crea)
 export function createServer() // → http.Server sin escuchar (los tests hacen listen(0))
-// Rutas: GET /api/invoices, GET /api/export.csv (story-1); GET / (story-2); el resto, 404.
 // Si se corre directo (node src/server.js): listen(process.env.PORT ?? 3000) e imprime la URL.
 
 // src/page.js (story-2)
@@ -155,44 +160,55 @@ export function totalAmount(invoices) // → number, suma de amount; [] → 0
 export function renderPage() // → string: el HTML completo, con totalAmount.toString() dentro del <script>
 ```
 
-El navegador usa la API de story-1 tal como la fija la SPEC: `GET /api/invoices?status=&month=` devuelve el arreglo y `GET /api/export.csv?status=&month=` baja el archivo. Story-2 no necesita el código de story-1 para empezar, solo este contrato.
+Forma de `createServer()` que deja story-1. Cada marcador lo reemplaza **solo** su story, y nadie más toca estas líneas:
 
-## Story 1: `feat/T-02-story-1` · servidor, API y descarga
+```js
+    if (req.method === 'GET' && url.pathname === '/api/invoices') { ... }   // story-1
 
-**Persona:** Diego Hernández (persona A, además coordinador)
+    // story-3: GET /api/export.csv
 
-**Qué entra:** el servidor con las dos rutas de datos (corresponde a S1 y S3 del ticket) y los filtros comunes.
+    // story-2: GET /
+
+    res.writeHead(404, ...)                                                  // story-1
+```
+
+El navegador usa la API tal como la fija la SPEC: `GET /api/invoices?status=&month=` devuelve el arreglo y `GET /api/export.csv?status=&month=` baja el archivo. Ninguna story necesita el código de otra para **empezar**, solo este contrato.
+
+## Story 1: `feat/T-02-story-1` · API
+
+**Persona:** Katia
+
+**Qué entra:** los filtros comunes y el servidor con `GET /api/invoices` y el 404 (S1 del ticket).
 
 **Diseño técnico (qué toca, contratos, orden):**
 
 1. Crea `src/query.js` con `parseFilters` y `selectInvoices` según el contrato. Reusa `filterInvoices` del T-01; no lo modifica.
 2. Crea `src/server.js` con `createServer()` (`node:http`). Parsea la URL con `new URL(req.url, 'http://localhost')`.
-3. `GET /api/invoices`: `parseFilters`; si hay error, 400 con JSON `{ error }`. Si no, `selectInvoices(listInvoices(), filtros)` y 200 con JSON.
-4. `GET /api/export.csv`: mismos filtros y mismo 400. Si no hay error, 200 con `toCsv(selección)`, `text/csv; charset=utf-8` y `Content-Disposition: attachment; filename="facturas.csv"`.
-5. Cualquier otra ruta, 404. Deja un comentario `// story-2: GET /` en el punto donde story-2 agrega su ruta, para que el diff de story-2 sea de dos líneas.
+3. `GET /api/invoices`: `parseFilters`; si hay error, 400 con JSON `{ error }`. Si no, `selectInvoices(listInvoices(), filtros)` y 200 con `application/json; charset=utf-8`.
+4. Deja los dos marcadores `// story-3: GET /api/export.csv` y `// story-2: GET /`, separados por una línea en blanco, antes del 404.
+5. Cualquier otra ruta o método, 404.
 6. Arranque directo: si `process.argv[1]` resuelve a este archivo, escucha en `PORT ?? 3000` e imprime `http://localhost:<puerto>`.
 
 **Archivos:** `src/query.js` (nuevo), `src/server.js` (nuevo), `test/api.test.js` (nuevo).
 
-**Criterios de la spec que resuelve:** 18 a 26.
+**Criterios de la spec que resuelve:** 18, 19, 20, 21, 22 y 26.
 
-**Test de aceptación (falla antes de codear):** `test/api.test.js`. Levanta `createServer().listen(0)` en un `before` y lo cierra en un `after`; usa `fetch`. Un test por criterio, con el número en el nombre:
+**Test de aceptación (falla antes de codear):** `test/api.test.js`. Levanta `createServer().listen(0)` en un `before` y lo cierra en un `after`; usa `fetch`. Un test por criterio:
 
 - `criterio 18: /api/invoices sin filtros devuelve F-1001, F-1002, F-1004`
 - `criterio 19: status=open devuelve F-1002 y F-1004`
 - `criterio 20: month=2026-08 devuelve F-1001 y F-1002`
 - `criterio 21: status=void y month=2026-09 devuelve solo F-1003`
 - `criterio 22: status o month inválidos responden 400 con el mensaje`
-- `criterio 23: /api/export.csv es el toCsv del T-01, como attachment`
-- `criterio 24: export.csv respeta status y month`
-- `criterio 25: export.csv con month inválido responde 400 sin CSV`
 - `criterio 26: una ruta desconocida responde 404`
 
 Comando: `npm test`. Falla porque `src/server.js` no existe.
 
+**Ajuste pendiente (2026-10-19):** la rama ya tiene push (`c187c4a`) con el reparto anterior de 2 personas, que incluía `/api/export.csv`. Para el reparto de 3, Katia saca de su rama el bloque `GET /api/export.csv` de `src/server.js` (lo reemplaza por el marcador `// story-3: GET /api/export.csv`), el `import { toCsv }` que queda sin uso y los tests de los criterios 23, 24 y 25 de `test/api.test.js`. Lo anota en su fila de `status.md`, commit y push. Esos criterios pasan a story-3.
+
 ## Story 2: `feat/T-02-story-2` · página, filtros y total
 
-**Persona:** Joaquin Martinez (persona B)
+**Persona:** Joaquin Martinez
 
 **Qué entra:** la página que ve María (S2 del ticket): tabla, filtros, total y el botón de descarga, y la ruta `GET /`.
 
@@ -201,129 +217,125 @@ Comando: `npm test`. Falla porque `src/server.js` no existe.
 1. Crea `src/page.js` con `totalAmount` y `renderPage` según el contrato.
 2. `renderPage()` devuelve un HTML con `<select name="status">` (`""` Todas sin anuladas, `paid` pagada, `open` abierta, `void` anulada), `<input type="month" name="month">`, una `<table>` con id, cliente, fecha, monto y estado, `<span id="total">` y `<a id="descargar" href="/api/export.csv">Descargar CSV</a>`.
 3. Script inline: incrusta `totalAmount.toString()`. Al cargar y en cada `change`, arma los query params (omite los vacíos), hace `fetch('/api/invoices?' + params)`, pinta las filas (con `textContent`, nunca `innerHTML` con datos), pone el total y actualiza el `href` de `#descargar` a `/api/export.csv?` con los mismos params. Si la API responde 400, muestra el `error` en la página.
-4. Cuando story-1 esté en verde y con push: `git merge origin/feat/T-02-story-1`. En `src/server.js`, en el comentario `// story-2: GET /`, agrega la ruta: `GET /` → 200, `text/html; charset=utf-8`, `renderPage()`. Ese es el único cambio de story-2 fuera de sus archivos.
-5. Prueba manual del criterio 29 con `node src/server.js` en el navegador y Excel. Anota el resultado en `status.md`.
+4. Cuando story-1 esté en `main`: `git merge origin/main`. En `src/server.js`, reemplaza el marcador `// story-2: GET /` por la ruta: `GET /` → 200, `text/html; charset=utf-8`, `renderPage()`. Ese es el único cambio de story-2 fuera de sus archivos.
+5. Prueba manual de tabla, filtros y total con `node src/server.js`. "Descargar CSV" da 404 hasta que story-3 llegue a `main`: es esperado.
 
 **Archivos:** `src/page.js` (nuevo), `test/page.test.js` (nuevo), `src/server.js` (solo la ruta `GET /`, después del merge de story-1).
 
-**Criterios de la spec que resuelve:** 27, 28 y 29.
+**Criterios de la spec que resuelve:** 27, 28 y 29 (el 29 se cierra en la integración final, con las tres stories en `main`).
 
 **Test de aceptación (falla antes de codear):** `test/page.test.js`:
 
 - `criterio 28: totalAmount suma los montos y da 0 sin facturas`: unitario, solo con `src/page.js`.
 - `criterio 27: renderPage trae tabla, filtros, total, Descargar CSV y totalAmount`: unitario sobre el string de `renderPage()`, sin servidor.
-- `criterio 27: GET / sirve ese HTML con text/html`: levanta `createServer().listen(0)` y hace `fetch('/')`. **Se escribe después de `git merge origin/main`** (cuando `src/server.js` ya existe), con `import` dinámico como en `test/csv.test.js`.
+- `criterio 27: GET / sirve ese HTML con text/html`: levanta `createServer().listen(0)` y hace `fetch('/')`. **Se escribe después de `git merge origin/main`**, cuando `src/server.js` ya existe.
 
-Comando: `npm test`. Falla porque `src/page.js` no existe. Después del merge de story-1, el test HTTP del 27 sigue en rojo (404) hasta que se agrega la ruta.
+Comando: `npm test`. Falla porque `src/page.js` no existe. El 27 va partido en dos porque el hook bloquea el commit con `npm test` en rojo: con el 27 unitario, story-2 commitea `page.js` en verde sin esperar a story-1.
 
-Por qué partido en dos: el hook bloquea el commit con `npm test` en rojo. Si el test HTTP importa `src/server.js` antes de que exista, story-2 no puede commitear nada hasta que story-1 mergee. Con el 27 unitario, story-2 commitea `page.js` en verde a los ~25 min, sin esperar a nadie.
+**Estado (2026-10-19):** `page.js` y los dos tests unitarios ya tienen push (`6f55c8d`, `d55c3ef`). Falta el paso 4.
+
+## Story 3: `feat/T-02-story-3` · descarga CSV
+
+**Persona:** Diego Hernández
+
+**Qué entra:** `GET /api/export.csv` (S3 del ticket), con los mismos filtros que la API.
+
+**Diseño técnico (qué toca, contratos, orden):**
+
+1. Escribe el test rojo de inmediato (`test/export.test.js`). Importa `../src/server.js` y `../src/csv.js`.
+2. Cuando story-1 tenga push con el ajuste (o esté en `main`): `git merge origin/feat/T-02-story-1` (o `origin/main`).
+3. En `src/server.js`, reemplaza el marcador `// story-3: GET /api/export.csv` por la ruta: `parseFilters` (si hay error, 400 con JSON `{ error }`, igual que `/api/invoices`); si no, 200 con `toCsv(selectInvoices(listInvoices(), filtros))`, `text/csv; charset=utf-8` y `Content-Disposition: attachment; filename="facturas.csv"`. Agrega `import { toCsv } from './csv.js'`.
+4. No crea archivos de producto nuevos: reusa `parseFilters`, `selectInvoices` y `toCsv` sin modificarlos.
+
+**Archivos:** `test/export.test.js` (nuevo), `src/server.js` (solo la ruta de export y su import).
+
+**Criterios de la spec que resuelve:** 23, 24 y 25.
+
+**Test de aceptación (falla antes de codear):** `test/export.test.js`, con `createServer().listen(0)` y `fetch`:
+
+- `criterio 23: /api/export.csv es el toCsv del T-01, como attachment`: compara los **bytes** (`arrayBuffer`) con `Buffer.from(toCsv(...))` de F-1001, F-1002 y F-1004; `fetch().text()` se come el BOM.
+- `criterio 24: export.csv respeta status y month`
+- `criterio 25: export.csv con month inválido responde 400 sin CSV`
+
+Comando: `npm test`. Falla porque `src/server.js` no existe (antes del merge de story-1) o porque la ruta responde 404 (después).
 
 ## Orden (T-02)
 
-| Min | Story 1 | Story 2 |
-|---|---|---|
-| 0–10 | Commit a `main` de `tickets/T-02.md`, SPEC y PLAN. Crea el worktree | Crea el worktree |
-| 10–25 | Test rojo de `api.test.js`, después `query.js` y `server.js` en verde, push | Test rojo de `page.test.js`, después `totalAmount` y `renderPage` |
-| 25–40 | PR, review de Claude contra la SPEC, comentario de story-2, arreglos, **merge** | `git merge origin/main` (ya trae story-1), ruta `GET /`, verde, PR |
-| 40–55 | Review del PR de story-2 (comentario que cita la SPEC) | Arreglos, **merge**, prueba manual del criterio 29, `status.md` al día |
+| Paso | Story 1 (Katia) | Story 2 (Joaquin) | Story 3 (Diego) |
+|---|---|---|---|
+| 1 | Ajuste: saca export de su rama, verde, push | (ya tiene `page.js` en verde) | Test rojo de `export.test.js`; pega la salida en `status.md` |
+| 2 | PR → review del agente → comentario de Joaquin → arreglos → **merge** | — | `git merge origin/feat/T-02-story-1`, ruta de export, verde, push |
+| 3 | — | `git merge origin/main`, ruta `GET /`, test HTTP del 27, verde, PR → review del agente → comentario de Diego → **merge** | — |
+| 4 | — | — | `git merge origin/main`, verde, PR → review del agente → comentario de Katia → **merge** |
+| 5 | Integración final en `main`: `npm test` en verde y criterio 29 completo (tabla, filtros, total y descarga en Excel) | | |
 
-- **Story-1 no depende de nadie.** Story-2 depende de story-1 solo para el criterio 27 (la ruta `/`).
-- **Orden del merge:** story-1 → story-2. Story-2 trae `main` antes de su PR, así su diff sobre `src/server.js` queda en dos líneas sin conflicto.
-- **Hook de tests del kit:** bloquea `git commit` si `npm test` falla. El test rojo no se puede commitear solo: córrelo, pega la salida roja en `status.md` y commitea test y código juntos cuando estén en verde. Nunca uses `--no-verify` (deja 0 en seguridad).
-- **Si se acaba el tiempo:** lo que no está mergeado a las 18:40 se anota como gap en `status.md`, no como hecho.
+- **Orden del merge:** story-1 → story-2 → story-3. Cada story trae `main` antes de su PR, así cada PR es chico y llega sin conflictos.
+- **`status.md`:** cada uno edita solo su fila. La fila `T-02-story-3` la agrega Diego en su rama, debajo de la de story-2; al traer `main` en el paso 4 puede aparecer un conflicto de una línea con la fila de Joaquin, y se resuelve dejando las dos.
+- **Hook de tests del kit:** bloquea `git commit` si `npm test` falla. El test rojo no se commitea solo: se corre, la salida roja va a `status.md`, y test y código se commitean juntos en verde. Nunca `--no-verify` (deja 0 en seguridad).
+- **Lo que no esté mergeado** queda como gap en `status.md`, no como hecho.
 
 ## Worktrees (T-02)
 
-Cada persona trabaja en su computador. El coordinador (Diego) crea y publica las dos ramas; cada uno monta su worktree en su máquina.
+Cada persona trabaja en su computador, en su worktree.
 
 ```
-# Diego, en Dia1/ (coordinador)
+# Katia y Joaquin (ya tienen su rama): en su worktree
+git pull
+
+# Diego, en Dia1/
 git pull origin main
-git branch feat/T-02-story-1 main && git push -u origin feat/T-02-story-1
-git branch feat/T-02-story-2 main && git push -u origin feat/T-02-story-2
-git worktree add ../Dia1-T02-story-1 feat/T-02-story-1            # persona A: Diego
-
-# Joaquin, en su clone del repo
-git checkout main && git pull origin main
-git worktree add ../Dia1-T02-story-2 origin/feat/T-02-story-2 -b feat/T-02-story-2   # persona B: Joaquin
-cd ../Dia1-T02-story-2 && git branch -u origin/feat/T-02-story-2
+git worktree add ../Dia1-T02-story-3 feat/T-02-story-3
 ```
 
-## Coordinador y revisor (T-02): el estándar del Día 3, en equipo de 2
+## Coordinador y revisor (T-02): el estándar del Día 3
 
-Copia de la demo "En vivo: un coordinador moderniza MOD-7 y otro agente revisa cada PR", con el T-02 en vez de MOD-7. Tres sesiones de Claude y dos personas. Las decisiones, las reviews finales y los merges son de las personas.
+Copia de la demo "En vivo: un coordinador moderniza MOD-7 y otro agente revisa cada PR", con el T-02 en vez de MOD-7. Las decisiones, las reviews finales y los merges son de las personas. **Sin `gh`:** los PRs, los comentarios y los merges se hacen en la web de GitHub (https://github.com/diegohernandez-hub/Dia1).
 
-| Sesión | Dónde corre | Quién la maneja | Qué hace | Qué no hace |
+| Sesión | Dónde corre | Quién | Qué hace | Qué no hace |
 |---|---|---|---|---|
-| **Coordinador** | `Dia1/` (checkout en `main`), computador de Diego | Diego (A) | Reparte (worktrees), vigila `status.md` y los PRs, lanza el revisor sobre cada PR y deja su informe como comentario | No escribe código de producto. No hace merge |
-| **Worker 1** | `../Dia1-T02-story-1`, computador de Diego | Diego (A) | Story-1: test rojo, `query.js` y `server.js`, PR | No toca `src/page.js` |
-| **Worker 2** | `../Dia1-T02-story-2`, computador de Joaquin | Joaquin (B) | Story-2: test rojo, `page.js`, ruta `GET /`, PR | No toca `src/query.js` |
-| **Revisor** | Subagente `revisor-spec` (`.claude/agents/revisor-spec.md`), lanzado por el coordinador; contexto limpio y solo lectura | — | Compara el diff del PR con `workdocs/SPEC.md` y lista solo las brechas, con la frase de la spec y la línea del código | No edita, no comenta en GitHub, no aprueba |
+| **Coordinador** | `Dia1/` (en `main`), computador de Diego | Diego | Vigila ramas, `status.md` y PRs; lanza el revisor sobre cada rama y le pasa el informe a la persona dueña del PR | No escribe código de producto. No hace merge |
+| **Worker 1** | worktree de story-1, computador de Katia | Katia | Story-1 | No toca `src/page.js` ni la ruta de export |
+| **Worker 2** | worktree de story-2, computador de Joaquin | Joaquin | Story-2 | No toca `src/query.js` ni la ruta de export |
+| **Worker 3** | `../Dia1-T02-story-3`, computador de Diego | Diego | Story-3 | No toca `src/query.js` ni `src/page.js` |
+| **Revisor** | Subagente `revisor-spec` (`.claude/agents/revisor-spec.md`), lanzado por el coordinador; contexto limpio y solo lectura | — | Compara el diff de la rama con `workdocs/SPEC.md` y lista solo las brechas, con la frase de la spec y la línea del código | No edita, no comenta en GitHub, no aprueba |
 
-Regla: quien escribió el código no es el único que lo revisa. Cada PR pasa por el revisor (paso 1) y por la persona que **no** lo escribió (paso 2): A revisa el PR de story-2 y B el de story-1.
+**Reviews cruzadas:** quien escribió el código no es el único que lo revisa. Cada PR pasa por el revisor (paso 1) y por una persona que no lo escribió (paso 2): **Joaquin comenta el PR de Katia, Diego el de Joaquin y Katia el de Diego.** Cada uno hace merge de su propio PR.
 
 ### Prompts
 
-**Lanzar (coordinador, en `Dia1/`, minuto 0):**
-
-> Lanza T-02. Lee `workdocs/SPEC.md` (criterios 18–30) y `workdocs/PLAN.md` (sección T-02). Verifica que `main` tenga SPEC, PLAN, `tickets/T-02.md` y `.claude/agents/revisor-spec.md`; si no, para y dime qué falta. Crea los dos worktrees de "Worktrees (T-02)", haz push de las ramas y dame el comando para abrir Claude en cada uno. Después espera: no codees.
-
 **Worker (cada persona, Claude abierto de cero en su worktree):**
 
-> ¿En qué story estoy y cuáles son sus criterios? Escribe el test de aceptación de mi story según PLAN.md y córrelo: tiene que fallar. Pega la salida roja en mi fila de `workdocs/status.md`. Después implementa hasta verde, commit y push. Abre el PR con `/workshop-devs:pr-tesseron` y para.
+> ¿En qué story estoy y cuáles son sus criterios? Escribe el test de aceptación de mi story según PLAN.md y córrelo: tiene que fallar. Pega la salida roja en mi fila de `workdocs/status.md`. Después implementa hasta verde, commit y push. No abras el PR: escribe el body con `.github/pull_request_template.md` en un archivo fuera del repo (links al ticket y a SPEC.md, criterios por número y el informe: salida de `npm test` y un `curl` de mi ruta) y dame el título. Para.
 
-El body del PR lleva, en "Notas de migración", el **informe del PR** (equivalente al "preview" de la demo): criterios que resuelve por número, salida de `npm test` (tests, pass, fail), y para story-1 un `curl` de `/api/invoices?status=open` y de `/api/export.csv` con sus primeras líneas.
+**Abrir el PR (cada persona, en la web):** `https://github.com/diegohernandez-hub/Dia1/compare/main...feat/T-02-story-<n>` → título y body → **Create draft pull request**.
 
-**Revisar (coordinador, por cada PR abierto):**
+**Revisar (coordinador, por cada PR):**
 
-> Usa el subagente revisor-spec sobre el PR #<n>. Muéstrame su lista. Si la apruebo, publícala con `gh pr comment <n> --body-file` y anota la tarea y el resumen en la tabla Workers de `status.md`.
+> `git fetch origin`. Usa el subagente revisor-spec sobre la rama `feat/T-02-story-<n>`, con `git diff origin/main...origin/feat/T-02-story-<n>`. Dame su lista en texto para pegarla en el PR y anota la tarea y el resumen en la tabla Workers de `status.md`.
 
-Alternativa sin subagente (sesión aparte, como la GitHub Action de la demo):
-
-```
-gh pr diff <n> | claude -p --permission-mode dontAsk --allowedTools "Read" "Grep" "Glob" \
-  "Revisa este diff contra workdocs/SPEC.md. Lista solo lo que contradice la SPEC o le falta, con la frase de la SPEC y la línea del código. Ignora estilo y nombres."
-```
-
-**Cada observación del revisor:** se mira la línea que cita. Si es real, se reproduce con un test que falla (en la misma rama), se arregla y se responde en el PR con el commit. Si no aplica, se responde en el PR por qué, citando la SPEC o el diff. "Sin hallazgos" también es un resultado: se comenta igual.
+La persona dueña del PR pega el informe como comentario en el PR. Por cada observación: si es real, la reproduce con un test que falla, arregla en la misma rama y responde con el commit; si no aplica, responde por qué, citando la SPEC o el diff. "Sin hallazgos" también se comenta.
 
 ### Qué tiene que atrapar el revisor (los "23:30 y 00:00" del T-02)
-
-Bordes que los tests felices no ven. Si el revisor no los menciona, la persona que revisa los mira a mano:
 
 - **S14 / criterio 18:** sin `status`, ¿excluye las `void`? Un `selectInvoices` que use `includeVoid: true` siempre pasa el 19 y el 21 y rompe el 18.
 - **Criterio 22 y 25:** `status=` vacío cuenta como ausente (no 400); `status=PAID` o `month=2026-13` sí son 400. En el 25, la respuesta de error no puede salir con `text/csv`.
 - **Criterio 23 / S16:** el CSV es `toCsv(...)` byte a byte, con BOM. Un `res.end` con otra codificación o un `\n` agregado lo rompe y Excel lo nota.
 - **Criterio 27:** la página arma el `href` de "Descargar CSV" con los **mismos** params que el `fetch` (lo que se ve es lo que se baja). Pinta con `textContent`, nunca `innerHTML` con datos de facturas.
+- **Marcadores:** cada story reemplaza solo su marcador en `src/server.js`. Un diff que mueve o borra el marcador de otra story genera conflicto.
 - **Fuera de alcance:** ningún `npm install`, ningún cambio en `src/filters.js`, `src/csv.js`, `src/cli.js` ni `invoices.json`. El diff que no está en la SPEC no entra.
-
-### Cronograma con el coordinador (17:45–18:40)
-
-| Hora | Coordinador (A) | Worker 1 (A) | Worker 2 (B) |
-|---|---|---|---|
-| 17:45 | Merge a `main` de SPEC, PLAN, ticket y revisor. "Lanza T-02" | — | — |
-| 17:50 | Worktrees y ramas creadas | Abre Claude en su worktree | Abre Claude en su worktree |
-| 17:50–18:10 | Vigila `status.md` | Test rojo → verde, push, PR | Test rojo → `page.js` verde, push |
-| 18:10 | Revisor sobre el PR de story-1, comentario | Arreglos del revisor y de B | B comenta el PR de story-1 citando la SPEC |
-| 18:15 | — | A hace **merge** de story-1 | `git merge origin/main`, ruta `GET /`, test HTTP del 27, PR |
-| 18:25 | Revisor sobre el PR de story-2, comentario | A comenta el PR de story-2 citando la SPEC | Arreglos, `gh pr ready` |
-| 18:32 | — | — | B hace **merge** de story-2 |
-| 18:32–18:40 | `npm test` en `main`, criterio 29 en el navegador y Excel, `status.md` con links a los PRs | Ensayo de los 3 min | Ensayo de los 3 min |
-
-18:40: `main` congelado. Lo que no mergeó es gap en `status.md`.
 
 ### Contra el puntaje (100)
 
 | Puntos | Qué lo asegura en este plan |
 |---|---|
-| 25 UI | Criterio 29 probado desde `main` antes de las 18:40 |
-| 25 Trazabilidad | Cada test nombra su criterio; cada PR cita criterios; comentario del revisor + comentario humano + merge humano |
+| 25 UI | Criterio 29 probado desde `main` con las tres stories mergeadas |
+| 25 Trazabilidad | Cada test nombra su criterio; cada PR cita criterios; informe del revisor + comentario humano cruzado + merge humano |
 | 20 Calidad | Un test por criterio (18–28) y `npm test` verde en `main` |
-| 15 Seguridad | Hook del kit activo (`/hooks`), sin `--no-verify`, sin secretos. `gh` autenticado con `gh auth login`, nunca un token en archivos |
-| 15 Estado | `status.md`: roles (2 por persona), rojo/verde por story, workers (revisor), links a PRs; una sesión nueva sobre `main` sabe qué quedó |
+| 15 Seguridad | Hook del kit activo (`/hooks`), sin `--no-verify`, sin secretos |
+| 15 Estado | `status.md`: roles (2 por persona), rojo y verde por story, workers (revisor), links a los 3 PRs; una sesión nueva sobre `main` sabe qué quedó |
 
 ### Presentación (3 min)
 
-1. **UI en vivo (1 min):** `node src/server.js`, abierta + 2026-09 → F-1004 y total 450000, "Descargar CSV" y abrirlo.
-2. **Una story trazable (1 min):** criterio 21 en SPEC → test `criterio 21` en `test/api.test.js` → PR de story-1 que lo cita → comentario del revisor → comentario de B → merge.
+1. **UI en vivo (1 min):** `node src/server.js`, abierta + 2026-09 → F-1004 y total 450000, "Descargar CSV" y abrirlo en Excel.
+2. **Una story trazable (1 min):** criterio 23 en SPEC → test `criterio 23` en `test/export.test.js` → PR de story-3 que lo cita → informe del revisor → comentario de Katia → merge.
 3. **Estado (1 min):** `status.md` y `npm test` verde sobre `main`.
