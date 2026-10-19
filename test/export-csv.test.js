@@ -4,7 +4,7 @@
 // Windows y en CI. El criterio 16 lo cubre `npm test` completo.
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { test } from 'node:test'
@@ -120,4 +120,23 @@ test('criterio 14: si no se puede escribir, sale con código 1, nombra la ruta y
   assert.equal(result.status, 1)
   assert.ok(result.stderr.includes(cwd), 'stderr nombra la ruta')
   assert.doesNotMatch(result.stderr, /^ {4}at /m, 'sin stack trace')
+})
+
+test('criterio 17: --out no puede pisar src/data/invoices.json (ruta relativa ni absoluta)', (t) => {
+  // Corre sobre una copia de src/: si el test está en rojo, la copia se daña, no el fixture del repo.
+  const srcDir = dirname(cliPath)
+  for (const variant of ['relativa', 'absoluta']) {
+    const cwd = newTmp(t)
+    cpSync(srcDir, join(cwd, 'src'), { recursive: true })
+    const copyCli = join(cwd, 'src', 'cli.js')
+    const dataFile = join(cwd, 'src', 'data', 'invoices.json')
+    const before = readFileSync(dataFile)
+    const out = variant === 'relativa' ? join('src', 'data', 'invoices.json') : dataFile
+    const result = spawnSync(process.execPath, [copyCli, 'export-csv', '--out', out], { cwd, encoding: 'utf8' })
+    assert.equal(result.status, 1, `ruta ${variant}: sale con código 1`)
+    assert.match(result.stderr, /invoices\.json/, `ruta ${variant}: stderr nombra el archivo`)
+    assert.deepEqual(readFileSync(dataFile), before, `ruta ${variant}: invoices.json queda intacto`)
+    const list = spawnSync(process.execPath, [copyCli, 'list'], { cwd, encoding: 'utf8' })
+    assert.equal(list.status, 0, `ruta ${variant}: list sigue funcionando`)
+  }
 })
