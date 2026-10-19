@@ -2,6 +2,7 @@ import { createServer as createHttpServer } from 'node:http'
 import { fileURLToPath } from 'node:url'
 import { toCsv } from './csv.js'
 import { listInvoices } from './invoices.js'
+import { renderPage } from './page.js'
 import { parseFilters, selectInvoices } from './query.js'
 
 function sendJson(res, status, body) {
@@ -38,7 +39,11 @@ export function createServer() {
       return
     }
 
-    // story-2: GET /
+    if (req.method === 'GET' && url.pathname === '/') {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+      res.end(renderPage())
+      return
+    }
 
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
     res.end('not found')
