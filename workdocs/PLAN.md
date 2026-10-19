@@ -270,7 +270,7 @@ Comando: `npm test`. Falla porque `src/server.js` no existe (antes del merge de 
 | 5 | Integración final en `main`: `npm test` en verde y criterio 29 completo (tabla, filtros, total y descarga en Excel) | | |
 
 - **Orden del merge:** story-1 → story-2 → story-3. Cada story trae `main` antes de su PR, así cada PR es chico y llega sin conflictos.
-- **`status.md`:** cada uno edita solo su fila. La fila `T-02-story-3` la agrega Diego en su rama, debajo de la de story-2; al traer `main` en el paso 4 puede aparecer un conflicto de una línea con la fila de Joaquin, y se resuelve dejando las dos.
+- **`status.md`:** cada uno edita solo su fila. Las filas `T-02-story-1` y `T-02-story-2` son vecinas: cuando Joaquin trae `main` en el paso 3, git marca conflicto en `status.md` (ensayado el 2026-10-19). Se resuelve dejando la fila de Katia y la de Joaquin, las dos completas. Lo mismo para Diego en el paso 4 con su fila `T-02-story-3`. `src/server.js` no da conflicto (ensayado: S1 → S2 → S3, 34 tests en verde).
 - **Hook de tests del kit:** bloquea `git commit` si `npm test` falla. El test rojo no se commitea solo: se corre, la salida roja va a `status.md`, y test y código se commitean juntos en verde. Nunca `--no-verify` (deja 0 en seguridad).
 - **Lo que no esté mergeado** queda como gap en `status.md`, no como hecho.
 
