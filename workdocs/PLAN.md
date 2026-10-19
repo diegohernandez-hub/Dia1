@@ -31,7 +31,7 @@ export function filterInvoices(invoices, { month = null, includeVoid = false } =
 
 ### Story 1: `feat/T-01-story-1` · armar el CSV
 
-**Persona:**
+**Persona:** Joaquin Martinez
 
 **Qué entra:** `toCsv(invoices)` en `src/csv.js`. Es una función pura: no lee ni escribe archivos y no filtra.
 

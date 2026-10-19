@@ -28,7 +28,7 @@ Anota el comando y el resultado. Primero rojo. Después verde, o un gap citado.
 
 | Story | Comando | Resultado | Gap (si sigue rojo) |
 |---|---|---|---|
-| T-01-story-1 | | | |
+| T-01-story-1 | `npm test` | Rojo (2026-10-15): 7 tests, 4 pass, 3 fail; los 3 de `test/csv.test.js` (criterios 2, 6 y 15) fallaban con `ERR_MODULE_NOT_FOUND`. Verde (2026-10-19): 7 tests, 7 pass, 0 fail, con `toCsv` en `src/csv.js`. | |
 | T-01-story-2 | | | |
 | T-01-story-3 | `npm test` | FAIL: 9 de 9 tests de `test/export-csv.test.js` en rojo (criterios 1, 7–14); los 4 de `test/invoices.test.js` en verde (criterio 16) | Falta el comando `export-csv` en `src/cli.js`, y para el verde, `toCsv` (story-1) y `filterInvoices` (story-2) |
 
@@ -38,6 +38,7 @@ Una tarea acotada y su resumen. Si hubo implementación y falta esta línea, M4 
 
 | Story | Tarea | Resumen |
 |---|---|---|
+| T-01-story-1 | Explore: revisar `test/csv.test.js` contra los criterios 2, 6 y 15 de `SPEC.md` y el contrato de `toCsv` en `PLAN.md` | OK, sin nada fuera de spec. Sugirió endurecer el criterio 2 (sin línea vacía final ni `\r` suelto); se aplicó. |
 | T-01-story-3 | Revisar `test/export-csv.test.js` contra `SPEC.md`: cobertura, falsos rojos, sobreespecificación y portabilidad | Los 9 criterios propios están cubiertos y fallan por la causa correcta. El 10 exigía que stderr nombrara la ruta (la spec no lo pide): pasa a control positivo. El 9 dependía del filtro de story-2: ahora compara los ids finales. Se agregan `'\uFEFF'` explícito, detección de `\n` sueltos, carpeta vacía para "no escribe" y limpieza de tmp. |
 
 ## Día 3
