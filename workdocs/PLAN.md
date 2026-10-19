@@ -111,6 +111,12 @@ Comando: `npm test`. Falla porque `export-csv` no existe (sale con el mensaje de
 
 <!-- Si son 4 personas: story-4 `feat/T-01-story-4` toma el paso 2 de story-3 (parseo y validación de argumentos) en `src/args.js` con `parseExportArgs(argv) → { month, includeVoid, out } | { error }`, y los criterios 7, 11, 12 y 13. story-3 solo lo llama. -->
 
+## Casos borde (Día 3)
+
+Una línea por caso: quién, qué criterio de la spec y en qué story.
+
+- **Diego Hernández** · criterio 17 · story-3 (`src/cli.js`): `--out` apuntando a `src/data/invoices.json` borraba los datos. Ahora `export-csv` lo rechaza antes de escribir.
+
 ## Orden
 
 - **Story 1 y story 2 son independientes** entre sí: pueden avanzar en paralelo desde el primer minuto.
