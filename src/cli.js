@@ -1,5 +1,6 @@
 import { existsSync, statSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { toCsv } from './csv.js'
 import { filterInvoices } from './filters.js'
 import { getInvoice, listInvoices } from './invoices.js'
@@ -9,6 +10,7 @@ const USAGE = [
   '       node src/cli.js export-csv [--month YYYY-MM] [--include-void] [--out <ruta>]',
 ].join('\n')
 const MONTH_FORMAT = /^\d{4}-(0[1-9]|1[0-2])$/
+const DATA_PATH = join(dirname(fileURLToPath(import.meta.url)), 'data', 'invoices.json')
 
 function printInvoice(invoice) {
   console.log(
@@ -47,6 +49,12 @@ function parseExportArgs(args) {
   return options
 }
 
+// En Windows las rutas no distinguen mayúsculas: SRC\Data\Invoices.json es el mismo archivo.
+function samePath(a, b) {
+  const norm = (path) => (process.platform === 'win32' ? resolve(path).toLowerCase() : resolve(path))
+  return norm(a) === norm(b)
+}
+
 function isDirectory(path) {
   return existsSync(path) && statSync(path).isDirectory()
 }
@@ -56,6 +64,11 @@ function exportCsv(args) {
   const options = parseExportArgs(args)
   if (options.error) {
     fail(`${options.error}\n${USAGE}`)
+  }
+
+  // SPEC criterio 17: --out nunca puede pisar la fuente de datos.
+  if (samePath(options.out, DATA_PATH)) {
+    fail(`--out no puede ser el archivo de datos (${options.out}): se perderían las facturas. Usa otra ruta.`)
   }
 
   const folder = dirname(resolve(options.out))
