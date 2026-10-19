@@ -211,9 +211,12 @@ Comando: `npm test`. Falla porque `src/server.js` no existe.
 **Test de aceptación (falla antes de codear):** `test/page.test.js`:
 
 - `criterio 28: totalAmount suma los montos y da 0 sin facturas`: unitario, solo con `src/page.js`.
-- `criterio 27: GET / sirve el HTML con tabla, filtros, total y Descargar CSV`: levanta `createServer().listen(0)` y hace `fetch('/')`.
+- `criterio 27: renderPage trae tabla, filtros, total, Descargar CSV y totalAmount`: unitario sobre el string de `renderPage()`, sin servidor.
+- `criterio 27: GET / sirve ese HTML con text/html`: levanta `createServer().listen(0)` y hace `fetch('/')`. **Se escribe después de `git merge origin/main`** (cuando `src/server.js` ya existe), con `import` dinámico como en `test/csv.test.js`.
 
-Comando: `npm test`. Falla porque `src/page.js` no existe. Después del merge de story-1, el criterio 27 sigue en rojo (404) hasta que se agrega la ruta.
+Comando: `npm test`. Falla porque `src/page.js` no existe. Después del merge de story-1, el test HTTP del 27 sigue en rojo (404) hasta que se agrega la ruta.
+
+Por qué partido en dos: el hook bloquea el commit con `npm test` en rojo. Si el test HTTP importa `src/server.js` antes de que exista, story-2 no puede commitear nada hasta que story-1 mergee. Con el 27 unitario, story-2 commitea `page.js` en verde a los ~25 min, sin esperar a nadie.
 
 ## Orden (T-02)
 
@@ -236,3 +239,82 @@ git pull origin main
 git worktree add -b feat/T-02-story-1 ../Dia1-T02-story-1 main   # persona A
 git worktree add -b feat/T-02-story-2 ../Dia1-T02-story-2 main   # persona B
 ```
+
+## Coordinador y revisor (T-02): el estándar del Día 3, en equipo de 2
+
+Copia de la demo "En vivo: un coordinador moderniza MOD-7 y otro agente revisa cada PR", con el T-02 en vez de MOD-7. Tres sesiones de Claude y dos personas. Las decisiones, las reviews finales y los merges son de las personas.
+
+| Sesión | Dónde corre | Quién la maneja | Qué hace | Qué no hace |
+|---|---|---|---|---|
+| **Coordinador** | `Dia1/` (checkout en `main`) | Persona A | Reparte (worktrees), vigila `status.md` y los PRs, lanza el revisor sobre cada PR y deja su informe como comentario | No escribe código de producto. No hace merge |
+| **Worker 1** | `../Dia1-T02-story-1` | Persona A | Story-1: test rojo, `query.js` y `server.js`, PR | No toca `src/page.js` |
+| **Worker 2** | `../Dia1-T02-story-2` | Persona B | Story-2: test rojo, `page.js`, ruta `GET /`, PR | No toca `src/query.js` |
+| **Revisor** | Subagente `revisor-spec` (`.claude/agents/revisor-spec.md`), lanzado por el coordinador; contexto limpio y solo lectura | — | Compara el diff del PR con `workdocs/SPEC.md` y lista solo las brechas, con la frase de la spec y la línea del código | No edita, no comenta en GitHub, no aprueba |
+
+Regla: quien escribió el código no es el único que lo revisa. Cada PR pasa por el revisor (paso 1) y por la persona que **no** lo escribió (paso 2): A revisa el PR de story-2 y B el de story-1.
+
+### Prompts
+
+**Lanzar (coordinador, en `Dia1/`, minuto 0):**
+
+> Lanza T-02. Lee `workdocs/SPEC.md` (criterios 18–30) y `workdocs/PLAN.md` (sección T-02). Verifica que `main` tenga SPEC, PLAN, `tickets/T-02.md` y `.claude/agents/revisor-spec.md`; si no, para y dime qué falta. Crea los dos worktrees de "Worktrees (T-02)", haz push de las ramas y dame el comando para abrir Claude en cada uno. Después espera: no codees.
+
+**Worker (cada persona, Claude abierto de cero en su worktree):**
+
+> ¿En qué story estoy y cuáles son sus criterios? Escribe el test de aceptación de mi story según PLAN.md y córrelo: tiene que fallar. Pega la salida roja en mi fila de `workdocs/status.md`. Después implementa hasta verde, commit y push. Abre el PR con `/workshop-devs:pr-tesseron` y para.
+
+El body del PR lleva, en "Notas de migración", el **informe del PR** (equivalente al "preview" de la demo): criterios que resuelve por número, salida de `npm test` (tests, pass, fail), y para story-1 un `curl` de `/api/invoices?status=open` y de `/api/export.csv` con sus primeras líneas.
+
+**Revisar (coordinador, por cada PR abierto):**
+
+> Usa el subagente revisor-spec sobre el PR #<n>. Muéstrame su lista. Si la apruebo, publícala con `gh pr comment <n> --body-file` y anota la tarea y el resumen en la tabla Workers de `status.md`.
+
+Alternativa sin subagente (sesión aparte, como la GitHub Action de la demo):
+
+```
+gh pr diff <n> | claude -p --permission-mode dontAsk --allowedTools "Read" "Grep" "Glob" \
+  "Revisa este diff contra workdocs/SPEC.md. Lista solo lo que contradice la SPEC o le falta, con la frase de la SPEC y la línea del código. Ignora estilo y nombres."
+```
+
+**Cada observación del revisor:** se mira la línea que cita. Si es real, se reproduce con un test que falla (en la misma rama), se arregla y se responde en el PR con el commit. Si no aplica, se responde en el PR por qué, citando la SPEC o el diff. "Sin hallazgos" también es un resultado: se comenta igual.
+
+### Qué tiene que atrapar el revisor (los "23:30 y 00:00" del T-02)
+
+Bordes que los tests felices no ven. Si el revisor no los menciona, la persona que revisa los mira a mano:
+
+- **S14 / criterio 18:** sin `status`, ¿excluye las `void`? Un `selectInvoices` que use `includeVoid: true` siempre pasa el 19 y el 21 y rompe el 18.
+- **Criterio 22 y 25:** `status=` vacío cuenta como ausente (no 400); `status=PAID` o `month=2026-13` sí son 400. En el 25, la respuesta de error no puede salir con `text/csv`.
+- **Criterio 23 / S16:** el CSV es `toCsv(...)` byte a byte, con BOM. Un `res.end` con otra codificación o un `\n` agregado lo rompe y Excel lo nota.
+- **Criterio 27:** la página arma el `href` de "Descargar CSV" con los **mismos** params que el `fetch` (lo que se ve es lo que se baja). Pinta con `textContent`, nunca `innerHTML` con datos de facturas.
+- **Fuera de alcance:** ningún `npm install`, ningún cambio en `src/filters.js`, `src/csv.js`, `src/cli.js` ni `invoices.json`. El diff que no está en la SPEC no entra.
+
+### Cronograma con el coordinador (17:45–18:40)
+
+| Hora | Coordinador (A) | Worker 1 (A) | Worker 2 (B) |
+|---|---|---|---|
+| 17:45 | Merge a `main` de SPEC, PLAN, ticket y revisor. "Lanza T-02" | — | — |
+| 17:50 | Worktrees y ramas creadas | Abre Claude en su worktree | Abre Claude en su worktree |
+| 17:50–18:10 | Vigila `status.md` | Test rojo → verde, push, PR | Test rojo → `page.js` verde, push |
+| 18:10 | Revisor sobre el PR de story-1, comentario | Arreglos del revisor y de B | B comenta el PR de story-1 citando la SPEC |
+| 18:15 | — | A hace **merge** de story-1 | `git merge origin/main`, ruta `GET /`, test HTTP del 27, PR |
+| 18:25 | Revisor sobre el PR de story-2, comentario | A comenta el PR de story-2 citando la SPEC | Arreglos, `gh pr ready` |
+| 18:32 | — | — | B hace **merge** de story-2 |
+| 18:32–18:40 | `npm test` en `main`, criterio 29 en el navegador y Excel, `status.md` con links a los PRs | Ensayo de los 3 min | Ensayo de los 3 min |
+
+18:40: `main` congelado. Lo que no mergeó es gap en `status.md`.
+
+### Contra el puntaje (100)
+
+| Puntos | Qué lo asegura en este plan |
+|---|---|
+| 25 UI | Criterio 29 probado desde `main` antes de las 18:40 |
+| 25 Trazabilidad | Cada test nombra su criterio; cada PR cita criterios; comentario del revisor + comentario humano + merge humano |
+| 20 Calidad | Un test por criterio (18–28) y `npm test` verde en `main` |
+| 15 Seguridad | Hook del kit activo (`/hooks`), sin `--no-verify`, sin secretos. `gh` autenticado con `gh auth login`, nunca un token en archivos |
+| 15 Estado | `status.md`: roles (2 por persona), rojo/verde por story, workers (revisor), links a PRs; una sesión nueva sobre `main` sabe qué quedó |
+
+### Presentación (3 min)
+
+1. **UI en vivo (1 min):** `node src/server.js`, abierta + 2026-09 → F-1004 y total 450000, "Descargar CSV" y abrirlo.
+2. **Una story trazable (1 min):** criterio 21 en SPEC → test `criterio 21` en `test/api.test.js` → PR de story-1 que lo cita → comentario del revisor → comentario de B → merge.
+3. **Estado (1 min):** `status.md` y `npm test` verde sobre `main`.
